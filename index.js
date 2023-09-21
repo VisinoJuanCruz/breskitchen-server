@@ -65,6 +65,7 @@ app.get('/api/cakes', async (req, res) => {
         path: 'ingredients.ingredient',
         select: 'name priceKg', // Incluye los campos 'name' y 'priceKg' del ingrediente
       })
+      .sort({name:1})
       .exec();
 
     res.json(cakes); // Devuelve las tortas con información de ingredientes populada en formato JSON como respuesta
@@ -129,180 +130,82 @@ app.post("/api/cakes", async (req, res) => {
     res.status(500).json({ error: "Error al crear el pastel" });
   });
 })
-  
-/*
 
+// Ruta para actualizar el precio de un ingrediente por su ID
+app.put('/api/ingredients/:id', async (req, res) => {
+  const ingredientId = req.params.id;
+  const newPriceKg = req.body.priceKg; // Nuevo precio por kilo enviado en el cuerpo de la solicitud
 
+  try {
+    const updatedIngredient = await Ingredient.findByIdAndUpdate(
+      ingredientId,
+      { priceKg: newPriceKg },
+      { new: true } // Para obtener la versión actualizada del ingrediente
+    );
 
-app.post("/api/recipes", async (req, res) => {
-    const recipe = req.body
-    
-    Recipe.create({
-        name:recipe.name,
-        difficulty:recipe.difficulty,
-        ingredients:recipe.ingredients,
-    
-    }).then((createdRecipe)=>{
-        res.status(201).json(createdRecipe)
-    })
-}
-)
-
-app.patch('/api/products/:productId', async (req, res) => {
-    
-    const { productId } = req.params;
-    const { action } = req.body;
-    
-  
-    try {
-      const product = await Product.findById(productId);
-  
-      if (!product) {
-        return res.status(404).json({ message: 'Producto no encontrado.' });
-      }
-  
-      if (action === 'increment') {
-        product.quantity += 1;
-        console.log(`Agregando ${product.name}`)
-      } else if (action === 'decrement') {
-        if (product.quantity > 0) {
-          product.quantity -= 1;
-          console.log(`Quitando ${product.name}`)
-        }
-      }
-  
-      await product.save();
-  
-      res.json(product);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error al actualizar la cantidad del producto.' });
-    }})
-
-
-
-
-app.delete("/api/moves/:id", async (req, res) => {
-    const id = req.params.id
-   
-
-    //Delete move and actualize Person 
-    Move.findByIdAndDelete(id).then((deletedMove)=>{
-        Person.findOne({name:deletedMove.name}).then((person)=>{
-            person.spent = person.spent - deletedMove.spent
-            person.owe = person.owe - deletedMove.owe
-            person.save()
-        
-            res.status(200).json(person)
-        
-
-
-                 
-    
-
-    })
-})
-
-    
-});
-
-app.post("/api/personas/reset", async (req, res) => {
-
-    const personUpdate = req.body;
-    console.log("ME LLEGA ESTO DEL FRONT:",personUpdate)
-    Person.updateMany({ $set: { spent: 0, owe: 0 } }) .
-        then((updatedPersons) => {
-            console.log("Updated persons:", updatedPersons);
-        }
-        ).then(() => {
-
-
-        try {
-            const updatedPerson = Person
-            .findByIdAndUpdate(personUpdate.id, {
-              $inc: { 
-                  spent: parseInt(personUpdate.spent),
-                   owe: parseInt(personUpdate.owe) },
-            });
-        
-            console.log("Finish update");
-            res.status(200).json(updatedPerson);
-          } catch (error) {
-            console.error("Error al actualizar los valores:", error);
-            res.status(500).json({ error: "Error al actualizar los valores" });
-          }})
-});
-
-
-
-        
-    
-
-
-app.post("/api/personas", async (req, res) => {
-    const person = req.body
-    console.log(person.name)
-    
-    Person.create({
-        name:person.name,
-        spent:person.spent,
-        owe:person.owe,
-    
-    }).then((createdPerson)=>{
-        res.status(201).json(createdPerson)
-    })
-})
-
-app.post("/api/personas", async (req, res) => {
-    const person = req.body
-    console.log(person,"NUEVO MOVIMIENTO")
-    
-    Move.create({
-        name:person.name,
-        spent:0,
-        owe:0,
-        motive:person.motive,
-        date: new Date()
-    
-    }).then((createdMove)=>{
-        res.status(201).json(createdMove)
-    })
-})
-
-app.put("/api/personas/", async (req, res) => {
-    const person = req.body;
-  
-    Move.create({
-        name:person.name,
-        spent:person.spent,
-        owe:person.owe,
-        motive:person.motive,
-        date: new Date()
-
-    
-
-    })
-
-    try {
-      const updatedPerson = await Person
-      .findByIdAndUpdate(person.id, {
-        $inc: { 
-            spent: parseInt(person.spent),
-             owe: parseInt(person.owe) },
-      });
-  
-      console.log("Finish update");
-      res.status(200).json(updatedPerson);
-    } catch (error) {
-      console.error("Error al actualizar los valores:", error);
-      res.status(500).json({ error: "Error al actualizar los valores" });
+    if (!updatedIngredient) {
+      return res.status(404).json({ error: 'Ingrediente no encontrado' });
     }
-  });
 
-*/
+    res.json(updatedIngredient);
+  } catch (error) {
+    console.error('Error al actualizar el precio del ingrediente', error);
+    res.status(500).json({ error: 'Error al actualizar el precio del ingrediente' });
+  }
+});
+
+
+// Ruta para actualizar una receta por su ID
+app.put('/api/cakes/:id', async (req, res) => {
+  const cakeId = req.params.id;
+  const updatedCakeData = req.body; // Los nuevos datos de la receta
+
+  try {
+    const updatedCake = await Cake.findByIdAndUpdate(
+      cakeId,
+      updatedCakeData,
+      { new: true } // Para obtener la versión actualizada de la receta
+    );
+
+    if (!updatedCake) {
+      return res.status(404).json({ error: 'Receta no encontrada' });
+    }
+
+    res.json(updatedCake);
+  } catch (error) {
+    console.error('Error al actualizar la receta', error);
+    res.status(500).json({ error: 'Error al actualizar la receta' });
+  }
+});
+
+
+// En tu archivo de rutas en el backend (puede variar según tu estructura de archivos)
+app.get('/api/cakes/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Buscar la receta por ID en la base de datos
+    const recipe = await Cake.findById(id)
+      .populate({
+        path: 'ingredients.ingredient',
+        select: 'name priceKg', // Incluir los campos 'name' y 'priceKg' del ingrediente
+      })
+      .exec();
+
+    if (!recipe) {
+      return res.status(404).json({ error: 'Receta no encontrada' });
+    }
+
+    res.json(recipe); // Devolver los detalles de la receta en formato JSON
+  } catch (error) {
+    console.error('Error al obtener los detalles de la receta', error);
+    res.status(500).json({ error: 'Error al obtener los detalles de la receta' });
+  }
+});
+
 
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Breskitchen server is running on port ${PORT}`);
     
 })
