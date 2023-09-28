@@ -2,6 +2,8 @@ const dotenv = require('dotenv').config();
 const express = require('express');
 const app = express();
 
+const bcrypt = require('bcrypt');
+
 const PORT = 3000
 //const PORT = process.env.PORT ;
 const mongoose = require('mongoose');
@@ -17,21 +19,23 @@ mongoose.connect(MONGODB_URL).then(()=>{
 
 })
 
-const cakeSchema= new Schema({
-    name: { type: String, required: true },
-    description:{ type: String, required: true },
-    price : { type: Number, required: true },
-    ofer : { type: Boolean, required: true },
-    image : { type: String, required: true },
-    ingredients: [
-      {
-        ingredient: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Ingredient'
-        },
-        quantity:{ type: Number, required: true } // Agregar el campo "quantity" para almacenar la cantidad de cada ingrediente
-      }
-    ],})
+const cakeSchema = new Schema({
+  name: { type: String, required: true },
+  description: { type: String, required: true },
+  price: { type: Number, required: true },
+  ofer: { type: Boolean, required: true },
+  image: { type: String, required: true },
+  ingredients: [
+    {
+      ingredient: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Ingredient',
+      },
+      quantity: { type: Number, required: true },
+    },
+  ],
+  discountRate: { type: Number, default: 0 }, // Agrega la propiedad discountRate
+});
 
 const Cake = mongoose.model('Cake', cakeSchema, "Cakes");
 
@@ -43,7 +47,12 @@ const ingredientSchema = new Schema({
 
 const Ingredient = mongoose.model('Ingredient', ingredientSchema, "Ingredients");
 
+const userSchema = new Schema({
+  username: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+});
 
+const User = mongoose.model('User', userSchema, "Users");
 
 
 
@@ -55,6 +64,65 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //ROUTES
+
+app.post('/api/add-user', async (req, res) => {
+  try {
+    // Verificar si el usuario ya existe
+    const existingUser = await User.findOne({ username: 'breskitchen' });
+    if (existingUser) {
+      return res.status(400).json({ error: 'El usuario ya existe' });
+    }
+
+    // Crear un hash de la contraseña antes de almacenarla
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash('teamamos', saltRounds);
+
+    // Crear un nuevo usuario
+    const newUser = new User({
+      username: 'breskitchen',
+      password: hashedPassword,
+    });
+
+    // Guardar el usuario en la base de datos
+    await newUser.save();
+
+    res.status(201).json({ message: 'Usuario agregado con éxito' });
+  } catch (error) {
+    console.error('Error al agregar el usuario', error);
+    res.status(500).json({ error: 'Error al agregar el usuario' });
+  }
+});
+
+
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  console.log(password)
+
+  try {
+    // Buscar el usuario por nombre de usuario en la base de datos
+    const user = await User.findOne({ username });
+
+    // Verificar si se encontró el usuario
+    if (user) {
+      // Comparar la contraseña proporcionada con el hash almacenado en la base de datos
+      const passwordMatch = bcrypt.compareSync(password, user.password);
+      
+      if (passwordMatch) {
+        // La autenticación fue exitosa
+        res.json({ success: true });
+      } else {
+        // La autenticación falló debido a contraseñas no coincidentes
+        res.json({ success: false, error: 'Contraseña incorrecta' });
+      }
+    } else {
+      // El usuario no fue encontrado
+      res.json({ success: false, error: 'Usuario no encontrado' });
+    }
+  } catch (error) {
+    console.error('Error de autenticación:', error);
+    res.status(500).json({ error: 'Error de autenticación' });
+  }
+});
 
 
 // Define una ruta para obtener todas las tortas con información de ingredientes populada
@@ -75,8 +143,25 @@ app.get('/api/cakes', async (req, res) => {
   }
 });
 
+app.get('/api/ofer-cakes', async (req, res) => {
+  try {
+    const cakes = await Cake.find({ofer:'true'})
+      .populate({
+        path: 'ingredients.ingredient',
+        select: 'name priceKg', // Incluye los campos 'name' y 'priceKg' del ingrediente
+      })
+      .sort({name:1})
+      .exec();
+
+    res.json(cakes); // Devuelve las tortas con información de ingredientes populada en formato JSON como respuesta
+  } catch (error) {
+    console.error('Error al obtener las tortas', error);
+    res.status(500).json({ error: 'Error al obtener las tortas' });
+  }
+});
+
 app.get("/api/ingredients", async (req, res) => {
-    Ingredient.find().then((ingredients)=>{
+    Ingredient.find().sort({name:1}).then((ingredients)=>{
         res.status(200).json(ingredients)
     })
 })
@@ -132,7 +217,7 @@ app.post("/api/cakes", async (req, res) => {
 })
 
 // Ruta para actualizar el precio de un ingrediente por su ID
-app.put('/api/ingredients/:id', async (req, res) => {
+app.put('/api/ingredients/updatePrice/:id', async (req, res) => {
   const ingredientId = req.params.id;
   const newPriceKg = req.body.priceKg; // Nuevo precio por kilo enviado en el cuerpo de la solicitud
 
@@ -153,6 +238,31 @@ app.put('/api/ingredients/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar el precio del ingrediente' });
   }
 });
+
+// Ruta para actualizar el nombre de un ingrediente por su ID
+app.put('/api/ingredients/updateName/:id', async (req, res) => {
+  const ingredientId = req.params.id;
+  const newName = req.body.name; // Nuevo nombre enviado en el cuerpo de la solicitud
+
+  try {
+    const updatedIngredient = await Ingredient.findByIdAndUpdate(
+      ingredientId,
+      { name: newName },
+      { new: true } // Para obtener la versión actualizada del ingrediente
+    );
+
+    if (!updatedIngredient) {
+      return res.status(404).json({ error: 'Ingrediente no encontrado' });
+    }
+
+    res.json(updatedIngredient);
+  } catch (error) {
+    console.error('Error al actualizar el nombre del ingrediente', error);
+    res.status(500).json({ error: 'Error al actualizar el nombre del ingrediente' });
+  }
+});
+
+
 
 
 // Ruta para actualizar una receta por su ID
@@ -202,6 +312,43 @@ app.get('/api/cakes/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener los detalles de la receta' });
   }
 });
+
+// Ruta para eliminar un ingrediente por su ID
+app.delete('/api/ingredients/:id', async (req, res) => {
+  const ingredientId = req.params.id;
+
+  try {
+    const deletedIngredient = await Ingredient.findByIdAndRemove(ingredientId);
+
+    if (!deletedIngredient) {
+      return res.status(404).json({ error: 'Ingrediente no encontrado' });
+    }
+
+    res.json({ message: 'Ingrediente eliminado con éxito' });
+  } catch (error) {
+    console.error('Error al eliminar el ingrediente', error);
+    res.status(500).json({ error: 'Error al eliminar el ingrediente' });
+  }
+});
+
+// Ruta para eliminar una receta por su ID
+app.delete('/api/cakes/:id', async (req, res) => {
+  const cakeId = req.params.id;
+
+  try {
+    const deletedCake = await Cake.findByIdAndRemove(cakeId);
+
+    if (!deletedCake) {
+      return res.status(404).json({ error: 'Receta no encontrada' });
+    }
+
+    res.json({ message: 'Receta eliminada con éxito' });
+  } catch (error) {
+    console.error('Error al eliminar la receta', error);
+    res.status(500).json({ error: 'Error al eliminar la receta' });
+  }
+});
+
 
 
 
