@@ -239,6 +239,7 @@ app.put('/api/ingredients/updatePrice/:id', async (req, res) => {
   }
 });
 
+
 // Ruta para actualizar el nombre de un ingrediente por su ID
 app.put('/api/ingredients/updateName/:id', async (req, res) => {
   const ingredientId = req.params.id;
@@ -287,6 +288,29 @@ app.put('/api/cakes/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar la receta' });
   }
 });
+
+app.put('/api/cakes/updatePrice/:id', async (req, res) => {
+  const cakeId = req.params.id;
+  const newPrice = req.body.price; // Nuevo precio por kilo enviado en el cuerpo de la solicitud
+
+  try {
+    const updatedCake = await Cake.findByIdAndUpdate(
+      cakeId,
+      { price: newPrice },
+      { new: true } // Para obtener la versión actualizada de la receta
+    );
+
+    if (!updatedCake) {
+      return res.status(404).json({ error: 'Receta no encontrada' });
+    }
+
+    res.json(updatedCake);
+  } catch (error) {
+    console.error('Error al actualizar el precio de la receta', error);
+    res.status(500).json({ error: 'Error al actualizar el precio de la receta' });
+  }
+});
+
 
 
 // En tu archivo de rutas en el backend (puede variar según tu estructura de archivos)
