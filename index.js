@@ -9,8 +9,12 @@ const PORT = 3000
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
+const session = require('express-session');
 
+const JWT_SECRET = 'teamamos'; 
 
 const MONGODB_URL= `mongodb+srv://breskitchen:bMuyQABRw34DhEeo@breskitchencluster.hqmk53c.mongodb.net/`
 
@@ -35,9 +39,13 @@ const cakeSchema = new Schema({
     },
   ],
   discountRate: { type: Number, default: 0 }, // Agrega la propiedad discountRate
+  category: { type: String , required: true},
 });
 
 const Cake = mongoose.model('Cake', cakeSchema, "Cakes");
+
+//Así agrego un nuevo atributo a los viejos elementos existentes
+Cake.updateMany({category:"torta"}).exec(); 
 
 const ingredientSchema = new Schema({
     name: { type: String, required: true },
@@ -57,13 +65,121 @@ const User = mongoose.model('User', userSchema, "Users");
 
 
 //Middlewares
+
+
+
+
+
+
 app.use(express.json());
 app.use(express.static('public'));
-app.use(cors());
+
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: 'http://localhost:5173', // Cambia esto al origen correcto de tu aplicación frontend
+  credentials: true,
+}));
+app.use(cookieParser());
+
+app.use(
+  session({
+    secret: 'teamamos',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'none', // o cambia a 'none' en producción según lo necesites
+      secure: true, // Cambia a true en producción si estás usando HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // Duración de la cookie en milisegundos (1 día)
+    },
+  })
+);
+
 
 
 //ROUTES
+
+
+app.get('/api/check-auth', (req, res) => {
+  // Comprueba si el usuario está autenticado a través de alguna lógica
+  // Puedes usar el token JWT que se almacena en la cookie para esta verificación
+
+  // Obtén el token JWT de las cookies
+  const authToken = req.cookies.authToken;
+  console.log("TOKEN QUE LLEGA AL BACK:", authToken)
+ 
+
+  if (authToken) {
+    try {
+      // Verifica el token JWT utilizando tu clave secreta (la misma que usaste al firmar el token)
+      const decodedToken = jwt.verify(authToken, JWT_SECRET);
+      console.log(decodedToken)
+      console.log('teamamos')
+      // Si la verificación es exitosa, el usuario está autenticado
+      res.json({ success: true, username: decodedToken.username });
+    } catch (error) {
+      // Si la verificación falla, el usuario no está autenticado
+      res.json({ success: false });
+    }
+  } else {
+    // Si no hay un token en las cookies, el usuario no está autenticado
+    res.json({ success: false });
+  }
+});
+// Ruta para iniciar sesión
+
+// Ruta para iniciar sesión
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Buscar el usuario por nombre de usuario en la base de datos
+    const user = await User.findOne({ username });
+
+    // Verificar si se encontró el usuario
+    if (user) {
+      // Comparar la contraseña proporcionada con el hash almacenado en la base de datos
+      const passwordMatch = await bcrypt.compare(password, user.password);
+
+      if (passwordMatch) {
+        // La autenticación fue exitosa
+        // Generar un token JWT (JSON Web Token)
+        const token = jwt.sign({ username: user.username }, JWT_SECRET, {
+          expiresIn: '1d', // El token expirará en 1 día
+        });
+
+        // Establecer la cookie con el token en la respuesta
+        
+        res.cookie('authToken', token, {
+          httpOnly: true,
+          sameSite: 'none', // Configurar SameSite como "None"
+          secure: true, // Solo se enviará la cookie en conexiones HTTPS
+          maxAge: 24 * 60 * 60 * 1000, // Duración de la cookie en milisegundos (1 día)
+        });
+
+        res.json({ success: true });
+      } else {
+        // La autenticación falló debido a contraseñas no coincidentes
+        res.json({ success: false, error: 'Contraseña incorrecta' });
+      }
+    } else {
+      // El usuario no fue encontrado
+      res.json({ success: false, error: 'Usuario no encontrado' });
+    }
+  } catch (error) {
+    console.error('Error de autenticación:', error);
+    res.status(500).json({ error: 'Error de autenticación' });
+  }
+});
+
+
+// Ruta para cerrar sesión
+app.post('/api/logout', (req, res) => {
+  // Eliminar la cookie de autenticación
+  res.clearCookie('authToken');
+  res.json({ success: true });
+});
+
 
 app.post('/api/add-user', async (req, res) => {
   try {
@@ -94,7 +210,7 @@ app.post('/api/add-user', async (req, res) => {
 });
 
 
-app.post('/api/login', async (req, res) => {
+/*app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   console.log(password)
 
@@ -124,6 +240,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+*/
 
 // Define una ruta para obtener todas las tortas con información de ingredientes populada
 app.get('/api/cakes', async (req, res) => {
@@ -202,6 +319,7 @@ app.post("/api/cakes", async (req, res) => {
     price: cake.price,
     ofer: cake.ofer,
     image: cake.image,
+    category: cake.category ,
     ingredients: cake.ingredients.map((ingredientData) => ({
       ingredient: ingredientData.ingredient,
       quantity: ingredientData.quantity
@@ -372,7 +490,6 @@ app.delete('/api/cakes/:id', async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar la receta' });
   }
 });
-
 
 
 
