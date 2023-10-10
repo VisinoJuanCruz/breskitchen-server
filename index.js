@@ -45,7 +45,7 @@ const cakeSchema = new Schema({
 const Cake = mongoose.model('Cake', cakeSchema, "Cakes");
 
 //Así agrego un nuevo atributo a los viejos elementos existentes
-Cake.updateMany({category:"torta"}).exec(); 
+//Cake.updateMany({category:"torta"}).exec(); 
 
 const ingredientSchema = new Schema({
     name: { type: String, required: true },
@@ -388,6 +388,7 @@ app.put('/api/ingredients/updateName/:id', async (req, res) => {
 app.put('/api/cakes/:id', async (req, res) => {
   const cakeId = req.params.id;
   const updatedCakeData = req.body; // Los nuevos datos de la receta
+  console.log(updatedCakeData)
 
   try {
     const updatedCake = await Cake.findByIdAndUpdate(
