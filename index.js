@@ -339,7 +339,9 @@ app.post("/api/cakes", async (req, res) => {
     price: cake.price,
     ofer: cake.ofer,
     image: cake.image,
+    carousel:cake.carousel,
     category: cake.category ,
+    outstanding:cake.outstanding,
     ingredients: cake.ingredients.map((ingredientData) => ({
       ingredient: ingredientData.ingredient,
       quantity: ingredientData.quantity
