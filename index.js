@@ -73,7 +73,7 @@ const User = mongoose.model('User', userSchema, "Users");
 
 // Middlewares
 app.use(cors({
-  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com',
+  origin: '*',
   credentials: true,
 }));
 
@@ -98,7 +98,7 @@ app.use(session({
 //ROUTES
 
 
-app.get('/api/check-auth', (req, res) => {
+app.get('/api/check-auth',cors(), (req, res) => {
   // Comprueba si el usuario está autenticado a través de alguna lógica
   // Puedes usar el token JWT que se almacena en la cookie para esta verificación
 
@@ -127,7 +127,7 @@ app.get('/api/check-auth', (req, res) => {
 // Ruta para iniciar sesión
 
 // Ruta para iniciar sesión
-app.post('/api/login', async (req, res) => {
+app.post('/api/login',cors(), async (req, res) => {
   const { username, password } = req.body;
 
   try {
@@ -172,14 +172,14 @@ app.post('/api/login', async (req, res) => {
 
 
 // Ruta para cerrar sesión
-app.post('/api/logout', (req, res) => {
+app.post('/api/logout',cors(), (req, res) => {
   // Eliminar la cookie de autenticación
   res.clearCookie('authToken');
   res.json({ success: true });
 });
 
 
-app.post('/api/add-user', async (req, res) => {
+app.post('/api/add-user',cors(), async (req, res) => {
   try {
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ username: 'breskitchen' });
@@ -241,7 +241,7 @@ app.post('/api/add-user', async (req, res) => {
 */
 
 // Define una ruta para obtener todas las tortas con información de ingredientes populada
-app.get('/api/cakes', async (req, res) => {
+app.get('/api/cakes',cors(), async (req, res) => {
   try {
     const cakes = await Cake.find()
       .populate({
@@ -258,7 +258,7 @@ app.get('/api/cakes', async (req, res) => {
   }
 });
 
-app.get('/api/ofer-cakes', async (req, res) => {
+app.get('/api/ofer-cakes',cors(), async (req, res) => {
   try {
     const cakes = await Cake.find({ofer:'true'})
       .populate({
@@ -275,7 +275,7 @@ app.get('/api/ofer-cakes', async (req, res) => {
   }
 });
 
-app.get('/api/carousel-cakes', async (req, res) => {
+app.get('/api/carousel-cakes',cors(), async (req, res) => {
   try {
     const cakes = await Cake.find({carousel:'true'})
       .populate({
@@ -292,13 +292,13 @@ app.get('/api/carousel-cakes', async (req, res) => {
   }
 });
 
-app.get("/api/ingredients", async (req, res) => {
+app.get("/api/ingredients",cors(), async (req, res) => {
     Ingredient.find().sort({name:1}).then((ingredients)=>{
         res.status(200).json(ingredients)
     })
 })
 
-app.post("/api/ingredients", async (req, res) => {
+app.post("/api/ingredients",cors(), async (req, res) => {
     const ingredient = req.body
     
     Ingredient.create({
@@ -312,7 +312,7 @@ app.post("/api/ingredients", async (req, res) => {
     })
 })
 
-app.post("/api/cakes", async (req, res) => {
+app.post("/api/cakes",cors(), async (req, res) => {
   const cake = req.body;
   console.log(cake);
   
@@ -352,7 +352,7 @@ app.post("/api/cakes", async (req, res) => {
 })
 
 // Ruta para actualizar el precio de un ingrediente por su ID
-app.put('/api/ingredients/updatePrice/:id', async (req, res) => {
+app.put('/api/ingredients/updatePrice/:id',cors(), async (req, res) => {
   const ingredientId = req.params.id;
   const newPriceKg = req.body.priceKg; // Nuevo precio por kilo enviado en el cuerpo de la solicitud
 
@@ -376,7 +376,7 @@ app.put('/api/ingredients/updatePrice/:id', async (req, res) => {
 
 
 // Ruta para actualizar el nombre de un ingrediente por su ID
-app.put('/api/ingredients/updateName/:id', async (req, res) => {
+app.put('/api/ingredients/updateName/:id',cors(), async (req, res) => {
   const ingredientId = req.params.id;
   const newName = req.body.name; // Nuevo nombre enviado en el cuerpo de la solicitud
 
@@ -402,7 +402,7 @@ app.put('/api/ingredients/updateName/:id', async (req, res) => {
 
 
 // Ruta para actualizar una receta por su ID
-app.put('/api/cakes/:id', async (req, res) => {
+app.put('/api/cakes/:id',cors(), async (req, res) => {
   const cakeId = req.params.id;
   const updatedCakeData = req.body; // Los nuevos datos de la receta
   console.log(updatedCakeData)
@@ -425,7 +425,7 @@ app.put('/api/cakes/:id', async (req, res) => {
   }
 });
 
-app.put('/api/cakes/updatePrice/:id', async (req, res) => {
+app.put('/api/cakes/updatePrice/:id',cors(), async (req, res) => {
   const cakeId = req.params.id;
   const newPrice = req.body.price; // Nuevo precio por kilo enviado en el cuerpo de la solicitud
 
@@ -450,7 +450,7 @@ app.put('/api/cakes/updatePrice/:id', async (req, res) => {
 
 
 // En tu archivo de rutas en el backend (puede variar según tu estructura de archivos)
-app.get('/api/cakes/:id', async (req, res) => {
+app.get('/api/cakes/:id', cors(),async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -474,7 +474,7 @@ app.get('/api/cakes/:id', async (req, res) => {
 });
 
 // Ruta para eliminar un ingrediente por su ID
-app.delete('/api/ingredients/:id', async (req, res) => {
+app.delete('/api/ingredients/:id',cors(), async (req, res) => {
   const ingredientId = req.params.id;
 
   try {
@@ -492,7 +492,7 @@ app.delete('/api/ingredients/:id', async (req, res) => {
 });
 
 // Ruta para eliminar una receta por su ID
-app.delete('/api/cakes/:id', async (req, res) => {
+app.delete('/api/cakes/:id', cors(),async (req, res) => {
   const cakeId = req.params.id;
 
   try {
