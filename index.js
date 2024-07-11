@@ -65,7 +65,11 @@ const userSchema = new Schema({
 
 const User = mongoose.model('User', userSchema, "Users");
 
-
+// Middlewares
+app.use(cors({
+  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com/',
+  credentials: true,
+}));
 
 
 
@@ -77,11 +81,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middlewares
-app.use(cors({
-  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com/',
-  credentials: true,
-}));
+
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -102,24 +102,24 @@ app.use(session({
 
 
 //ROUTES
-
+// Ruta para verificar la autenticación
 app.get('/api/check-auth', (req, res) => {
-  const authToken = req.cookies.authToken;
-  console.log("TOKEN QUE LLEGA AL BACK:", authToken);
+  const authToken = req.cookies.authToken; // Obtén el token de la cookie
 
   if (authToken) {
     try {
+      // Verifica el token JWT
       const decodedToken = jwt.verify(authToken, JWT_SECRET);
       console.log(decodedToken);
       res.json({ success: true, username: decodedToken.username });
     } catch (error) {
+      console.error('Error al verificar el token JWT:', error);
       res.json({ success: false });
     }
   } else {
     res.json({ success: false });
   }
 });
-
 
 // Ruta para iniciar sesión
 app.post('/api/login', async (req, res) => {
@@ -132,8 +132,10 @@ app.post('/api/login', async (req, res) => {
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (passwordMatch) {
+        // Genera un token JWT válido por 1 día
         const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1d' });
 
+        // Configura la cookie con el token JWT
         res.cookie('authToken', token, {
           httpOnly: true,
           sameSite: 'None',
@@ -156,9 +158,11 @@ app.post('/api/login', async (req, res) => {
 
 // Ruta para cerrar sesión
 app.post('/api/logout', (req, res) => {
+  // Borra la cookie del token JWT
   res.clearCookie('authToken');
   res.json({ success: true });
 });
+
 
 app.post('/api/add-user',cors(), async (req, res) => {
   try {
