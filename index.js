@@ -4,8 +4,8 @@ const app = express();
 
 const bcrypt = require('bcrypt');
 
-const PORT = 3000
-//const PORT = process.env.PORT ;
+
+const PORT = process.env.PORT ;
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const cors = require('cors');
@@ -16,7 +16,7 @@ const session = require('express-session');
 
 const JWT_SECRET = 'teamamos'; 
 
-const MONGODB_URL= `mongodb+srv://breskitchen:bMuyQABRw34DhEeo@breskitchencluster.hqmk53c.mongodb.net/`
+const MONGODB_URL= `mongodb+srv://${process.env.USERDATABASE}:${process.env.PASSWORDDATABASE}@breskitchencluster.hqmk53c.mongodb.net/`
 
 mongoose.connect(MONGODB_URL).then(()=>{
     console.log('Connected to MongoDB');
