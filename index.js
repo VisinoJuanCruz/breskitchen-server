@@ -73,7 +73,7 @@ const User = mongoose.model('User', userSchema, "Users");
 
 // Middlewares
 app.use(cors({
-  origin: '*',
+  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com/',
   credentials: true,
 }));
 
@@ -97,71 +97,49 @@ app.use(session({
 
 //ROUTES
 
-
-app.get('/api/check-auth',cors(), (req, res) => {
-  // Comprueba si el usuario está autenticado a través de alguna lógica
-  // Puedes usar el token JWT que se almacena en la cookie para esta verificación
-
-  // Obtén el token JWT de las cookies
+app.get('/api/check-auth', (req, res) => {
   const authToken = req.cookies.authToken;
-  console.log("TOKEN QUE LLEGA AL BACK:", authToken)
- 
+  console.log("TOKEN QUE LLEGA AL BACK:", authToken);
 
   if (authToken) {
     try {
-      // Verifica el token JWT utilizando tu clave secreta (la misma que usaste al firmar el token)
       const decodedToken = jwt.verify(authToken, JWT_SECRET);
-      console.log(decodedToken)
-      console.log('teamamos')
-      // Si la verificación es exitosa, el usuario está autenticado
+      console.log(decodedToken);
       res.json({ success: true, username: decodedToken.username });
     } catch (error) {
-      // Si la verificación falla, el usuario no está autenticado
       res.json({ success: false });
     }
   } else {
-    // Si no hay un token en las cookies, el usuario no está autenticado
     res.json({ success: false });
   }
 });
-// Ruta para iniciar sesión
+
 
 // Ruta para iniciar sesión
-app.post('/api/login',cors(), async (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Buscar el usuario por nombre de usuario en la base de datos
     const user = await User.findOne({ username });
 
-    // Verificar si se encontró el usuario
     if (user) {
-      // Comparar la contraseña proporcionada con el hash almacenado en la base de datos
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (passwordMatch) {
-        // La autenticación fue exitosa
-        // Generar un token JWT (JSON Web Token)
-        const token = jwt.sign({ username: user.username }, JWT_SECRET, {
-          expiresIn: '1d', // El token expirará en 1 día
-        });
+        const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1d' });
 
-        // Establecer la cookie con el token en la respuesta
-        
         res.cookie('authToken', token, {
           httpOnly: true,
-          sameSite: 'none', // Configurar SameSite como "None"
-          secure: true, // Solo se enviará la cookie en conexiones HTTPS
-          maxAge: 24 * 60 * 60 * 1000, // Duración de la cookie en milisegundos (1 día)
+          sameSite: 'None',
+          secure: true,
+          maxAge: 24 * 60 * 60 * 1000,
         });
 
         res.json({ success: true });
       } else {
-        // La autenticación falló debido a contraseñas no coincidentes
         res.json({ success: false, error: 'Contraseña incorrecta' });
       }
     } else {
-      // El usuario no fue encontrado
       res.json({ success: false, error: 'Usuario no encontrado' });
     }
   } catch (error) {
@@ -170,14 +148,11 @@ app.post('/api/login',cors(), async (req, res) => {
   }
 });
 
-
 // Ruta para cerrar sesión
-app.post('/api/logout',cors(), (req, res) => {
-  // Eliminar la cookie de autenticación
+app.post('/api/logout', (req, res) => {
   res.clearCookie('authToken');
   res.json({ success: true });
 });
-
 
 app.post('/api/add-user',cors(), async (req, res) => {
   try {
