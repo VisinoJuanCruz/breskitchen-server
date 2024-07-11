@@ -5,7 +5,7 @@ const app = express();
 const bcrypt = require('bcrypt');
 
 
-const PORT = process.env.PORT ;
+const PORT = process.env.PORT || 3000;
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const cors = require('cors');
