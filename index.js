@@ -67,37 +67,32 @@ const User = mongoose.model('User', userSchema, "Users");
 
 
 
-//Middlewares
 
 
 
 
-
+// Middlewares
+app.use(cors({
+  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com',
+  credentials: true,
+}));
 
 app.use(express.json());
 app.use(express.static('public'));
-
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com/', // Cambia esto al origen correcto de tu aplicación frontend
-  credentials: true,
-}));
 app.use(cookieParser());
 
-app.use(
-  session({
-    secret: 'teamamos',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: 'none', // o cambia a 'none' en producción según lo necesites
-      secure: true, // Cambia a true en producción si estás usando HTTPS
-      maxAge: 24 * 60 * 60 * 1000, // Duración de la cookie en milisegundos (1 día)
-    },
-  })
-);
-
+app.use(session({
+  secret: 'teamamos',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'none',
+    secure: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  },
+}));
 
 
 //ROUTES
