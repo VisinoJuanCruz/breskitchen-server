@@ -79,7 +79,7 @@ app.use(express.static('public'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: 'http://localhost:5173', // Cambia esto al origen correcto de tu aplicación frontend
+  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com/', // Cambia esto al origen correcto de tu aplicación frontend
   credentials: true,
 }));
 app.use(cookieParser());
