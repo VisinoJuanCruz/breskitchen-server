@@ -67,11 +67,9 @@ const User = mongoose.model('User', userSchema, "Users");
 
 // Middlewares
 app.use(cors({
-  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com/',
+  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com',
   credentials: true,
 }));
-
-
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'https://rosybrown-lyrebird-865308.hostingersite.com');
@@ -124,6 +122,8 @@ app.get('/api/check-auth', (req, res) => {
 // Ruta para iniciar sesión
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
+  console.log(`Solicitud recibida de: ${req.headers.origin}`);
+  console.log(`Datos del usuario: ${username}, ${password}`);
 
   try {
     const user = await User.findOne({ username });
@@ -132,10 +132,8 @@ app.post('/api/login', async (req, res) => {
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (passwordMatch) {
-        // Genera un token JWT válido por 1 día
         const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1d' });
 
-        // Configura la cookie con el token JWT
         res.cookie('authToken', token, {
           httpOnly: true,
           sameSite: 'None',
@@ -155,6 +153,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Error de autenticación' });
   }
 });
+
 
 // Ruta para cerrar sesión
 app.post('/api/logout', (req, res) => {
