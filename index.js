@@ -157,8 +157,11 @@ app.post('/api/login', async (req, res) => {
 
 // Ruta para cerrar sesión
 app.post('/api/logout', (req, res) => {
-  // Borra la cookie del token JWT
-  res.clearCookie('authToken');
+  res.clearCookie('authToken', {
+    httpOnly: true,
+    sameSite: 'None',
+    secure: true,
+  });
   res.json({ success: true });
 });
 
