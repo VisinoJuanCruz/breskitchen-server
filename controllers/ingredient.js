@@ -1,4 +1,6 @@
-const { Ingredient } = require("../models/ingredient")
+const { Ingredient } = require("../models/ingredient");
+const { IngredientPriceHistory } = require("../models/ingredientPriceHistory");
+
 
 const getAll = async (req, res) => {
     Ingredient.find().sort({name:1}).then((ingredients)=>{
@@ -18,27 +20,43 @@ const createOne = async (req, res) => {
         res.status(201).json(createdIngredient)
     })
   }
+
 const updateOnePrice = async (req, res) => {
     const ingredientId = req.params.id;
-    const newPriceKg = req.body.priceKg; // Nuevo precio por kilo enviado en el cuerpo de la solicitud
-  
+    const { priceKg, brand = "", supplier = "", note = "" } = req.body;
+
     try {
-      const updatedIngredient = await Ingredient.findByIdAndUpdate(
-        ingredientId,
-        { priceKg: newPriceKg },
-        { new: true } // Para obtener la versión actualizada del ingrediente
-      );
-  
-      if (!updatedIngredient) {
-        return res.status(404).json({ error: 'Ingrediente no encontrado' });
-      }
-  
-      res.json(updatedIngredient);
+        const ingredient = await Ingredient.findById(ingredientId);
+
+        if (!ingredient) {
+            return res.status(404).json({ error: "Ingrediente no encontrado" });
+        }
+
+        const previousPrice = ingredient.priceKg;
+
+        // 1. actualizar precio
+        ingredient.priceKg = priceKg;
+
+        // 2. guardar ingrediente
+        await ingredient.save();
+
+        // 3. guardar historial
+        await IngredientPriceHistory.create({
+            ingredient: ingredient._id,
+            previousPrice,
+            newPrice: priceKg,
+            brand,
+            supplier,
+            note
+        });
+
+        res.json(ingredient);
+
     } catch (error) {
-      console.error('Error al actualizar el precio del ingrediente', error);
-      res.status(500).json({ error: 'Error al actualizar el precio del ingrediente' });
+        console.error("Error al actualizar el precio del ingrediente", error);
+        res.status(500).json({ error: "Error al actualizar el precio del ingrediente" });
     }
-  }
+};
 const updateOneName = async (req, res) => {
     const ingredientId = req.params.id;
     const newName = req.body.name; // Nuevo nombre enviado en el cuerpo de la solicitud
