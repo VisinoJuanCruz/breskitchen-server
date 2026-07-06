@@ -5,10 +5,11 @@ const ingredientSchema = new Schema({
     name: { type: String, required: true },
     quantity: { type: Number, default: 0 },
     priceKg: { type: Number, default: 0 },
-    minStock: { type: Number, default: 0 },
-    currentStock: { type: Number, default: 0 },
-    })
+
+    // NUEVO: stock mínimo para alertas
+    minStock: { type: Number, default: 0 }
+});
 
 const Ingredient = mongoose.model('Ingredient', ingredientSchema, "Ingredients");
 
-module.exports = {Ingredient}
+module.exports = { Ingredient };
