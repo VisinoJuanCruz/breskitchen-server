@@ -1,68 +1,93 @@
 const { Ingredient } = require("../models/ingredient");
 const { IngredientPriceHistory } = require("../models/ingredientPriceHistory");
+const recipeImpactService = require("../services/recipeImpact.service");
+
 
 const getAll = async (req, res) => {
-  try {
-    const ingredients = await Ingredient.find().sort({ name: 1 }).exec();
-    res.status(200).json(ingredients);
-  } catch (error) {
-    console.error('Error al obtener ingredientes', error);
-    res.status(500).json({ error: 'Error al obtener ingredientes' });
+    Ingredient.find().sort({name:1}).then((ingredients)=>{
+        res.status(200).json(ingredients)
+    })
   }
-}
 const createOne = async (req, res) => {
-  const ingredient = req.body;
-
-  try {
-    const createdIngredient = await Ingredient.create({
-      name: ingredient.name,
-      priceKg: ingredient.priceKg,
-      quantity: ingredient.quantity,
-    });
-
-    console.log("Cargando: ", ingredient);
-    res.status(201).json(createdIngredient);
-  } catch (error) {
-    console.error('Error al crear ingrediente', error);
-    res.status(500).json({ error: 'Error al crear ingrediente' });
+    const ingredient = req.body
+    
+    Ingredient.create({
+        name:ingredient.name,
+        priceKg:ingredient.priceKg,
+        quantity:ingredient.quantity,
+    
+    }).then((createdIngredient)=>{
+        console.log("Cargando: ", ingredient)
+        res.status(201).json(createdIngredient)
+    })
   }
-}
 
 const updateOnePrice = async (req, res) => {
     const ingredientId = req.params.id;
     const { priceKg, brand = "", supplier = "", note = "" } = req.body;
 
     try {
+
         const ingredient = await Ingredient.findById(ingredientId);
 
         if (!ingredient) {
-            return res.status(404).json({ error: "Ingrediente no encontrado" });
+            return res.status(404).json({
+                error: "Ingrediente no encontrado"
+            });
         }
 
         const previousPrice = ingredient.priceKg;
 
-        // 1. actualizar precio
+        // Actualizar precio
         ingredient.priceKg = priceKg;
 
-        // 2. guardar ingrediente
         await ingredient.save();
 
-        // 3. guardar historial
+        // Guardar historial
         await IngredientPriceHistory.create({
+
             ingredient: ingredient._id,
+
             previousPrice,
+
             newPrice: priceKg,
+
             brand,
+
             supplier,
+
             note
+
         });
 
-        res.json(ingredient);
+        // Calcular impacto en recetas
+        const affectedRecipes =
+            await recipeImpactService.calculateImpact(
+                ingredient._id,
+                previousPrice,
+                priceKg
+            );
+
+        res.json({
+
+            ingredient,
+
+            affectedRecipes
+
+        });
 
     } catch (error) {
-        console.error("Error al actualizar el precio del ingrediente", error);
-        res.status(500).json({ error: "Error al actualizar el precio del ingrediente" });
+
+        console.error(error);
+
+        res.status(500).json({
+
+            error: "Error al actualizar el precio del ingrediente"
+
+        });
+
     }
+
 };
 const updateOneName = async (req, res) => {
     const ingredientId = req.params.id;
@@ -89,12 +114,12 @@ const deleteOne = async (req, res) => {
     const ingredientId = req.params.id;
   
     try {
-      const deletedIngredient = await Ingredient.findByIdAndDelete(ingredientId);
-
+      const deletedIngredient = await Ingredient.findByIdAndRemove(ingredientId);
+  
       if (!deletedIngredient) {
         return res.status(404).json({ error: 'Ingrediente no encontrado' });
       }
-
+  
       res.json({ message: 'Ingrediente eliminado con éxito' });
     } catch (error) {
       console.error('Error al eliminar el ingrediente', error);
