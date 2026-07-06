@@ -1,22 +1,31 @@
 const { Cake } = require("../models/cake");
 const mongoose = require('mongoose');
+const cakeRepository = require("../repositories/cake.repository");
+const costService = require("../services/cost.service");
 
 const getAll = async (req, res) => {
+
     try {
-      const cakes = await Cake.find()
-        .populate({
-          path: 'ingredients.ingredient',
-          select: 'name priceKg', // Incluye los campos 'name' y 'priceKg' del ingrediente
-        })
-        .sort({name:1})
-        .exec();
-  
-      res.json(cakes); // Devuelve las tortas con información de ingredientes populada en formato JSON como respuesta
+
+        const recipes = await cakeRepository.findAll();
+
+        const recipesWithCosts = recipes.map(recipe =>
+            costService.calculateRecipeCost(recipe)
+        );
+
+        res.json(recipesWithCosts);
+
     } catch (error) {
-      console.error('Error al obtener las tortas', error);
-      res.status(500).json({ error: 'Error al obtener las tortas' });
+
+        console.error("Error al obtener las recetas", error);
+
+        res.status(500).json({
+            error: "Error al obtener las recetas"
+        });
+
     }
-  }
+
+};
 const getAllOfer = async (req, res) => {
     try {
       const cakes = await Cake.find({ofer:'true'})
