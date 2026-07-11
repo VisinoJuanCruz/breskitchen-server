@@ -16,7 +16,7 @@ const session = require('express-session');
 
 const JWT_SECRET = 'teamamos'; 
 
-const MONGODB_URL= `mongodb+srv://${process.env.USERDATABASE}:${process.env.PASSWORDDATABASE}@breskitchencluster.hqmk53c.mongodb.net/`
+const MONGODB_URL= `mongodb+srv://${process.env.USERDATABASE}:${process.env.PASSWORDDATABASE}@breskitchencluster.hqmk53c.mongodb.net/develop`
 
 mongoose.connect(MONGODB_URL).then(()=>{
     console.log('Connected to MongoDB');
@@ -66,13 +66,15 @@ const userSchema = new Schema({
 const User = mongoose.model('User', userSchema, "Users");
 
 // Middlewares
+
+
 app.use(cors({
-  origin: 'https://rosybrown-lyrebird-865308.hostingersite.com',
-  credentials: true,
+  origin: ['https://rosybrown-lyrebird-865308.hostingersite.com', 'http://localhost:5173'],
+  credentials: true
 }));
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://rosybrown-lyrebird-865308.hostingersite.com');
+  res.header('Access-Control-Allow-Origin','http://localhost:5173');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
