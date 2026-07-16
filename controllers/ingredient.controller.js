@@ -9,18 +9,114 @@ const getAll = async (req, res) => {
     })
   }
 const createOne = async (req, res) => {
-    const ingredient = req.body
-    
-    Ingredient.create({
-        name:ingredient.name,
-        priceKg:ingredient.priceKg,
-        quantity:ingredient.quantity,
-    
-    }).then((createdIngredient)=>{
-        console.log("Cargando: ", ingredient)
-        res.status(201).json(createdIngredient)
-    })
-  }
+
+    const ingredient = req.body;
+
+    try {
+
+        const createdIngredient = await Ingredient.create({
+
+            name: ingredient.name,
+
+            unit: ingredient.unit ?? "kg",
+
+            quantity: ingredient.quantity ?? 0,
+
+            minStock: ingredient.minStock ?? 0,
+
+            priceKg: ingredient.priceKg ?? 0,
+
+            defaultBrand: ingredient.defaultBrand ?? "",
+
+            defaultSupplier: ingredient.defaultSupplier ?? "",
+
+            note: ingredient.note ?? ""
+
+        });
+
+        console.log("Cargando:", ingredient);
+
+        res.status(201).json(createdIngredient);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            error: "Error al crear ingrediente"
+
+        });
+
+    }
+
+};
+
+const updateOne = async (req, res) => {
+
+    const ingredientId = req.params.id;
+
+    try {
+
+        const updatedIngredient =
+            await Ingredient.findByIdAndUpdate(
+
+                ingredientId,
+
+                {
+
+                    name: req.body.name,
+
+                    unit: req.body.unit,
+
+                    quantity: req.body.quantity,
+
+                    minStock: req.body.minStock,
+
+                    defaultBrand: req.body.defaultBrand,
+
+                    defaultSupplier: req.body.defaultSupplier,
+
+                    note: req.body.note
+
+                },
+
+                {
+
+                    new: true,
+                    runValidators: true
+
+                }
+
+            );
+
+        if (!updatedIngredient) {
+
+            return res.status(404).json({
+
+                error: "Ingrediente no encontrado"
+
+            });
+
+        }
+
+        res.json(updatedIngredient);
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            error: "Error actualizando ingrediente"
+
+        });
+
+    }
+
+}
 
 const updateOnePrice = async (req, res) => {
     const ingredientId = req.params.id;
@@ -127,4 +223,4 @@ const deleteOne = async (req, res) => {
     }
   }
 
-module.exports = {getAll,createOne, updateOnePrice,updateOneName, deleteOne}
+module.exports = {getAll,createOne, updateOne, updateOnePrice,updateOneName, deleteOne}
