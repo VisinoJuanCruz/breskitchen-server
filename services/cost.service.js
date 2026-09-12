@@ -1,10 +1,11 @@
-function calculateIngredientCost(priceKg, grams) {
+function calculateIngredientCost(unitPrice, grams) {
 
-    if (!priceKg || !grams) {
+    if (!unitPrice || !grams) {
         return 0;
     }
 
-    return Number(((priceKg / 1000) * grams).toFixed(2));
+    // Asumir unitPrice es siempre por kg (después será más flexible)
+    return Number(((unitPrice / 1000) * grams).toFixed(2));
 
 }
 
@@ -22,7 +23,7 @@ function calculateRecipeCost(recipe) {
     const ingredients = recipeData.ingredients.map(item => {
 
         const ingredientCost = calculateIngredientCost(
-            item.ingredient.priceKg,
+            item.ingredient.unitPrice,
             item.quantity
         );
 

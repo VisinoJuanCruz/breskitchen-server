@@ -31,7 +31,7 @@ const getAllOfer = async (req, res) => {
       const cakes = await Cake.find({ofer:'true'})
         .populate({
           path: 'ingredients.ingredient',
-          select: 'name priceKg', // Incluye los campos 'name' y 'priceKg' del ingrediente
+          select: 'name unitPrice', // Incluye los campos 'name' y 'unitPrice' del ingrediente
         })
         .sort({name:1})
         .exec();
@@ -72,7 +72,7 @@ const getOne = async (req, res) => {
       const recipe = await Cake.findById(id)
         .populate({
           path: 'ingredients.ingredient',
-          select: 'name priceKg', // Incluir los campos 'name' y 'priceKg' del ingrediente
+          select: 'name unitPrice', // Incluir los campos 'name' y 'unitPrice' del ingrediente
         })
         .exec();
   

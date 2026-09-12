@@ -40,19 +40,19 @@ const createIngredientValidators = [
     .optional()
     .isFloat({ min: 0 })
     .withMessage('Quantity must be a positive number'),
-  body('priceKg')
+  body('unitPrice')
     .optional()
     .isFloat({ min: 0 })
-    .withMessage('Price per kg must be a positive number'),
+    .withMessage('Unit price must be a positive number'),
 ];
 
 const updateIngredientPriceValidators = [
   param('id')
     .isMongoId()
     .withMessage('Invalid ingredient ID'),
-  body('priceKg')
+  body('unitPrice')
     .isFloat({ min: 0 })
-    .withMessage('Price per kg must be a positive number'),
+    .withMessage('Unit price must be a positive number'),
 ];
 
 const updateIngredientNameValidators = [

@@ -1,3 +1,6 @@
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+
 const ingredientSchema = new Schema({
 
     // Nombre
@@ -15,7 +18,7 @@ const ingredientSchema = new Schema({
     },
 
     // Stock disponible
-    quantity: {
+    stock: {
         type: Number,
         default: 0
     },
@@ -27,7 +30,7 @@ const ingredientSchema = new Schema({
     },
 
     // Precio actual
-    priceKg: {
+    unitPrice: {
         type: Number,
         default: 0
     },
@@ -54,3 +57,11 @@ const ingredientSchema = new Schema({
 {
     timestamps: true
 });
+
+const Ingredient = mongoose.model(
+    "Ingredient",
+    ingredientSchema,
+    "Ingredients"
+);
+
+module.exports = { Ingredient };

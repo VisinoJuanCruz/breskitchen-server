@@ -20,11 +20,11 @@ const createOne = async (req, res) => {
 
             unit: ingredient.unit ?? "kg",
 
-            quantity: ingredient.quantity ?? 0,
+            stock: ingredient.stock ?? 0,
 
             minStock: ingredient.minStock ?? 0,
 
-            priceKg: ingredient.priceKg ?? 0,
+            unitPrice: ingredient.unitPrice ?? 0,
 
             defaultBrand: ingredient.defaultBrand ?? "",
 
@@ -69,7 +69,7 @@ const updateOne = async (req, res) => {
 
                     unit: req.body.unit,
 
-                    quantity: req.body.quantity,
+                    stock: req.body.stock,
 
                     minStock: req.body.minStock,
 
@@ -120,7 +120,7 @@ const updateOne = async (req, res) => {
 
 const updateOnePrice = async (req, res) => {
     const ingredientId = req.params.id;
-    const { priceKg, brand = "", supplier = "", note = "" } = req.body;
+    const { unitPrice, brand = "", supplier = "", note = "" } = req.body;
 
     try {
 
@@ -132,10 +132,10 @@ const updateOnePrice = async (req, res) => {
             });
         }
 
-        const previousPrice = ingredient.priceKg;
+        const previousPrice = ingredient.unitPrice;
 
         // Actualizar precio
-        ingredient.priceKg = priceKg;
+        ingredient.unitPrice = unitPrice;
 
         await ingredient.save();
 
@@ -146,7 +146,7 @@ const updateOnePrice = async (req, res) => {
 
             previousPrice,
 
-            newPrice: priceKg,
+            newPrice: unitPrice,
 
             brand,
 
@@ -161,8 +161,11 @@ const updateOnePrice = async (req, res) => {
             await recipeImpactService.calculateImpact(
                 ingredient._id,
                 previousPrice,
-                priceKg
+                unitPrice
             );
+
+        console.log("ENTRÉ A updateOnePrice");
+        console.log({ ingredient, affectedRecipes });
 
         res.json({
 

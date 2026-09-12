@@ -7,7 +7,7 @@ async function calculateImpact(ingredientId, oldPrice, newPrice) {
         "ingredients.ingredient": ingredientId
     }).populate({
         path: "ingredients.ingredient",
-        select: "name priceKg"
+        select: "name unitPrice"
     });
 
     const affectedRecipes = [];
@@ -20,7 +20,7 @@ async function calculateImpact(ingredientId, oldPrice, newPrice) {
         oldRecipe.ingredients = oldRecipe.ingredients.map(item => {
 
             if (item.ingredient._id.toString() === ingredientId.toString()) {
-                item.ingredient.priceKg = oldPrice;
+                item.ingredient.unitPrice = oldPrice;
             }
 
             return item;
