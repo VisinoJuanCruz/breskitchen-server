@@ -9,47 +9,31 @@ const getAll = async (req, res) => {
     })
   }
 const createOne = async (req, res) => {
-
-    const ingredient = req.body;
-
     try {
+        const ingredient = req.body;
 
         const createdIngredient = await Ingredient.create({
-
             name: ingredient.name,
-
             unit: ingredient.unit ?? "kg",
-
             stock: ingredient.stock ?? 0,
-
             minStock: ingredient.minStock ?? 0,
-
             unitPrice: ingredient.unitPrice ?? 0,
-
             defaultBrand: ingredient.defaultBrand ?? "",
-
             defaultSupplier: ingredient.defaultSupplier ?? "",
-
             note: ingredient.note ?? ""
-
         });
 
-        console.log("Cargando:", ingredient);
+        console.log("Ingrediente creado:", createdIngredient);
 
         res.status(201).json(createdIngredient);
 
     } catch (error) {
-
-        console.error(error);
+        console.error("Error al crear ingrediente:", error);
 
         res.status(500).json({
-
             error: "Error al crear ingrediente"
-
         });
-
     }
-
 };
 
 const updateOne = async (req, res) => {
@@ -227,3 +211,4 @@ const deleteOne = async (req, res) => {
   }
 
 module.exports = {getAll,createOne, updateOne, updateOnePrice,updateOneName, deleteOne}
+
