@@ -1,4 +1,6 @@
-const dotenv = require("dotenv").config();
+
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -11,13 +13,56 @@ const authRoutes = require("./routes/auth");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
-mongoose.connect(
-    `mongodb+srv://${process.env.USERDATABASE}:${process.env.PASSWORDDATABASE}@breskitchencluster.hqmk53c.mongodb.net/develop`
-).then(() => {
-    console.log("Connected to MongoDB");
-});
+// --------------------------------------------------
+// VALIDACIÓN DE VARIABLES DE ENTORNO
+// --------------------------------------------------
+
+const validateEnvironment = () => {
+    const requiredVariables = [
+        "USERDATABASE",
+        "PASSWORDDATABASE",
+        "JWT_SECRET",
+        "SESSION_SECRET"
+    ];
+
+    const missingVariables = requiredVariables.filter(
+        (variable) => !process.env[variable]?.trim()
+    );
+
+    if (missingVariables.length > 0) {
+        console.error(
+            "Error: faltan variables de entorno obligatorias:",
+            missingVariables.join(", ")
+        );
+
+        process.exit(1);
+    }
+
+    const secrets = ["JWT_SECRET", "SESSION_SECRET"];
+
+    for (const secret of secrets) {
+        if (process.env[secret].length < 32) {
+            console.error(
+                `Error: ${secret} debe tener al menos 32 caracteres.`
+            );
+
+            process.exit(1);
+        }
+    }
+
+    if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+        console.error("Error: PORT tiene un valor inválido.");
+        process.exit(1);
+    }
+
+    console.log("Variables de entorno validadas correctamente.");
+};
+
+// --------------------------------------------------
+// MIDDLEWARES
+// --------------------------------------------------
 
 app.use(cors({
     origin: [
@@ -44,10 +89,38 @@ app.use(session({
     }
 }));
 
+// --------------------------------------------------
+// RUTAS
+// --------------------------------------------------
+
 app.use("/api", authRoutes);
 app.use("/api/ingredients", ingredientRoutes);
 app.use("/api/cakes", cakeRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en ${PORT}`);
-});
+// --------------------------------------------------
+// INICIO DEL SERVIDOR
+// --------------------------------------------------
+
+const startServer = async () => {
+    validateEnvironment();
+
+    try {
+        const MONGODB_URI =
+            `mongodb+srv://${process.env.USERDATABASE}:${process.env.PASSWORDDATABASE}` +
+            `@breskitchencluster.hqmk53c.mongodb.net/develop`;
+
+        await mongoose.connect(MONGODB_URI);
+
+        console.log("Connected to MongoDB");
+
+        app.listen(PORT, () => {
+            console.log(`Servidor escuchando en el puerto ${PORT}`);
+        });
+
+    } catch (error) {
+        console.error("Error al iniciar el servidor:", error.message);
+        process.exit(1);
+    }
+};
+
+startServer();
