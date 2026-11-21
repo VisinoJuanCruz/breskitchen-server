@@ -107,7 +107,7 @@ const startServer = async () => {
     try {
         const MONGODB_URI =
             `mongodb+srv://${process.env.USERDATABASE}:${process.env.PASSWORDDATABASE}` +
-            `@breskitchencluster.hqmk53c.mongodb.net/develop`;
+            `@breskitchencluster.hqmk53c.mongodb.net/`;
 
         await mongoose.connect(MONGODB_URI);
 
