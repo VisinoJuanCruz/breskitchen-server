@@ -42,23 +42,16 @@ const updateOne = async (req, res) => {
   try {
     const updatedIngredient = await Ingredient.findByIdAndUpdate(
       ingredientId,
-
       {
         name: req.body.name,
-
         unit: req.body.unit,
-
-        stock: req.body.stock,
-
-        minStock: req.body.minStock,
-
+        stock: Number(req.body.stock),
+        minStock: Number(req.body.minStock),
+        unitPrice: Number(req.body.unitPrice),
         defaultBrand: req.body.defaultBrand,
-
         defaultSupplier: req.body.defaultSupplier,
-
         note: req.body.note,
       },
-
       {
         new: true,
         runValidators: true,
