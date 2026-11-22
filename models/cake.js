@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
@@ -44,6 +45,7 @@ const cakeSchema = new Schema(
       type: String,
       required: true,
     },
+
     imagePublicId: {
       type: String,
       default: null,
@@ -75,9 +77,15 @@ const cakeSchema = new Schema(
           min: 0,
         },
 
+        // Unidad utilizada para este ingrediente en esta receta.
+        // Es opcional para mantener compatibilidad con recetas antiguas.
+        quantityUnit: {
+          type: String,
+          enum: ["kg", "g", "l", "ml", "unidad"],
+        },
+
         stage: {
           type: String,
-
           enum: [
             "masa",
             "bizcochuelo",
